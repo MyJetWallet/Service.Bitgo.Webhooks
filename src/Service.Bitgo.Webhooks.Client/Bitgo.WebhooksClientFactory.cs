@@ -10,11 +10,11 @@ using Service.Bitgo.Webhooks.Grpc;
 namespace Service.Bitgo.Webhooks.Client
 {
     [UsedImplicitly]
-    public class Bitgo.WebhooksClientFactory
+    public class BitgoWebhooksClientFactory
     {
         private readonly CallInvoker _channel;
 
-        public Bitgo.WebhooksClientFactory(string assetsDictionaryGrpcServiceUrl)
+        public BitgoWebhooksClientFactory(string assetsDictionaryGrpcServiceUrl)
         {
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             var channel = GrpcChannel.ForAddress(assetsDictionaryGrpcServiceUrl);

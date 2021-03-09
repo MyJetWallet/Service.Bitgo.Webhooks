@@ -16,7 +16,7 @@ namespace TestApp
             Console.ReadLine();
 
 
-            var factory = new Bitgo.WebhooksClientFactory("http://localhost:5001");
+            var factory = new BitgoWebhooksClientFactory("http://localhost:5001");
             var client = factory.GetHelloService();
 
             var resp = await  client.SayHelloAsync(new HelloRequest(){Name = "Alex"});
