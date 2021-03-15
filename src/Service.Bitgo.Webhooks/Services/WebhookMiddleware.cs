@@ -2,7 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DotNetCoreDecorators;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Service.Bitgo.DepositDetector.Domain.Models;
+
 // ReSharper disable UnusedMember.Global
 
 namespace Service.Bitgo.Webhooks.Services
@@ -10,13 +15,19 @@ namespace Service.Bitgo.Webhooks.Services
     public class WebhookMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<WebhookMiddleware> _logger;
+        private readonly IPublisher<SignalBitGoTransfer> _publisher;
+
+        public string TransferPath = "/webhook/transfer";
 
         /// <summary>
         /// Middleware that handles all unhandled exceptions and logs them as errors.
         /// </summary>
-        public WebhookMiddleware(RequestDelegate next)
+        public WebhookMiddleware(RequestDelegate next, ILogger<WebhookMiddleware> logger, IPublisher<SignalBitGoTransfer> publisher)
         {
             _next = next;
+            _logger = logger;
+            _publisher = publisher;
         }
 
         /// <summary>
@@ -50,9 +61,43 @@ namespace Service.Bitgo.Webhooks.Services
 
             var query = context.Request.QueryString;
 
-            Console.WriteLine($"'{path}' | {query} | {method}\n{body}");
+            _logger.LogInformation($"'{path}' | {query} | {method}\n{body}");
+
+
+            if (path == TransferPath && method == "POST")
+            {
+                var dto = JsonConvert.DeserializeObject<TransferDto>(body);
+
+                await _publisher.PublishAsync(new SignalBitGoTransfer()
+                {
+                    Coin = dto.Coin,
+                    TransferId = dto.TransferId,
+                    WalletId = dto.WalletId
+                });
+            }
 
             context.Response.StatusCode = 200;
         }
+    }
+
+    public class TransferDto
+    {
+        [JsonProperty("coin")]
+        public string Coin { get; set; }
+
+        [JsonProperty("wallet")]
+        public string WalletId { get; set; }
+
+        [JsonProperty("type")]
+        public string Type { get; set; }
+
+        [JsonProperty("state")]
+        public string State { get; set; }
+
+        [JsonProperty("hash")]
+        public string Hash { get; set; }
+
+        [JsonProperty("hash")]
+        public string TransferId { get; set; }
     }
 }

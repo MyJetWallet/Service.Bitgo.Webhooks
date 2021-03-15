@@ -7,5 +7,8 @@ namespace Service.Bitgo.Webhooks.Settings
     {
         [YamlProperty("BitgoWebhooks.SeqServiceUrl")]
         public string SeqServiceUrl { get; set; }
+
+        [YamlProperty("BitgoWebhooks.SpotServiceBusHostPort")]
+        public string SpotServiceBusHostPort { get; set; }
     }
 }
