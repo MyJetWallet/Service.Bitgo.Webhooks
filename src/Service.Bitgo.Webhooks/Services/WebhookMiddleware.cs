@@ -97,7 +97,7 @@ namespace Service.Bitgo.Webhooks.Services
         [JsonProperty("hash")]
         public string Hash { get; set; }
 
-        [JsonProperty("hash")]
+        [JsonProperty("transfer")]
         public string TransferId { get; set; }
     }
 }
