@@ -64,7 +64,7 @@ namespace Service.Bitgo.Webhooks.Services
             _logger.LogInformation($"'{path}' | {query} | {method}\n{body}");
 
 
-            if (path == TransferPath && method == "POST")
+            if (path.StartsWithSegments(TransferPath) && method == "POST")
             {
                 var dto = JsonConvert.DeserializeObject<TransferDto>(body);
 
