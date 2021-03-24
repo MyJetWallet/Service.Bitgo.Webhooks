@@ -1,7 +1,10 @@
 ﻿using Autofac;
+using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using MyServiceBus.TcpClient;
+using Service.Bitgo.Webhooks.Domain.Models;
+using Service.Bitgo.Webhooks.Services;
 
 namespace Service.Bitgo.Webhooks.Modules
 {
@@ -21,7 +24,11 @@ namespace Service.Bitgo.Webhooks.Modules
             serviceBusClient.SocketLogs.AddLogException((context, exception) => ServiceBusLogger.LogInformation(exception, $"MyServiceBusTcpClient[Socket {context?.Id}|{context?.ContextName}|{context?.Inited}][Exception] {exception.Message}"));
             builder.RegisterInstance(serviceBusClient).AsSelf().SingleInstance();
 
-            
+            builder
+                .RegisterInstance(new SignalBitGoTransferBusPublisher(serviceBusClient))
+                .As<IPublisher<SignalBitGoTransfer>>()
+                .AutoActivate()
+                .SingleInstance();
         }
 
         

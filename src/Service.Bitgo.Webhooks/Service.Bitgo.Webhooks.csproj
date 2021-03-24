@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
     <PackageReference Include="MyJetWallet.Domain" Version="1.0.23" />
+    <PackageReference Include="MyJetWallet.Domain.ServiceBus" Version="1.1.0" />
     <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="1.0.0" />
     <PackageReference Include="MyJetWallet.Sdk.GrpcSchema" Version="1.0.5" />
     <PackageReference Include="MyJetWallet.Sdk.Service" Version="1.0.10" />
