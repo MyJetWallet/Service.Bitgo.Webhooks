@@ -1,11 +1,7 @@
 ﻿using Autofac;
-using Autofac.Core;
-using Autofac.Core.Registration;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using MyServiceBus.TcpClient;
-using Service.Bitgo.Webhooks.Settings;
-using SimpleTrading.SettingsReader;
 
 namespace Service.Bitgo.Webhooks.Modules
 {
@@ -25,7 +21,7 @@ namespace Service.Bitgo.Webhooks.Modules
             serviceBusClient.SocketLogs.AddLogException((context, exception) => ServiceBusLogger.LogInformation(exception, $"MyServiceBusTcpClient[Socket {context?.Id}|{context?.ContextName}|{context?.Inited}][Exception] {exception.Message}"));
             builder.RegisterInstance(serviceBusClient).AsSelf().SingleInstance();
 
-            DepositDetector.Client.AutofacHelper.RegisterClientRegistrationPublisher(builder, serviceBusClient);
+            
         }
 
         

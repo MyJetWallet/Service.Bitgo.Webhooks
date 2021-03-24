@@ -6,7 +6,8 @@ using DotNetCoreDecorators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Service.Bitgo.DepositDetector.Domain.Models;
+using Service.Bitgo.Webhooks.Domain.Models;
+
 
 // ReSharper disable UnusedMember.Global
 

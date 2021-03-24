@@ -9,7 +9,6 @@ using MyJetWallet.Sdk.GrpcMetrics;
 using MyJetWallet.Sdk.GrpcSchema;
 using Prometheus;
 using ProtoBuf.Grpc.Server;
-using Service.Bitgo.Webhooks.Grpc;
 using Service.Bitgo.Webhooks.Modules;
 using Service.Bitgo.Webhooks.Services;
 using SimpleTrading.BaseMetrics;
@@ -49,8 +48,6 @@ namespace Service.Bitgo.Webhooks
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcSchema<HelloService, IHelloService>();
-
                 endpoints.MapGrpcSchemaRegistry();
 
                 endpoints.MapGet("/", async context =>
