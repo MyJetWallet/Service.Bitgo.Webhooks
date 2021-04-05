@@ -10,5 +10,8 @@ namespace Service.Bitgo.Webhooks.Settings
 
         [YamlProperty("BitgoWebhooks.SpotServiceBusHostPort")]
         public string SpotServiceBusHostPort { get; set; }
+
+        [YamlProperty("BitgoWebhooks.ZipkinUrl")]
+        public string ZipkinUrl { get; set; }
     }
 }

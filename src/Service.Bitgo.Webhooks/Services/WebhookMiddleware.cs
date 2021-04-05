@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service;
 using Newtonsoft.Json;
 using Service.Bitgo.Webhooks.Domain.Models;
 
@@ -67,7 +68,13 @@ namespace Service.Bitgo.Webhooks.Services
 
             if (path.StartsWithSegments(TransferPath) && method == "POST")
             {
+                using var activity = MyTelemetry.StartActivity($"Receive transfer webhook");
+
+
                 var dto = JsonConvert.DeserializeObject<TransferDto>(body);
+
+                path.ToString().AddToActivityAsTag("webhook-path");
+                body.AddToActivityAsTag("webhook-body");
 
                 await _publisher.PublishAsync(new SignalBitGoTransfer()
                 {
