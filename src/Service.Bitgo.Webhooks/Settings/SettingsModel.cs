@@ -1,8 +1,8 @@
-﻿using SimpleTrading.SettingsReader;
+﻿using MyYamlParser;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Service.Bitgo.Webhooks.Settings
 {
-    [YamlAttributesOnly]
     public class SettingsModel
     {
         [YamlProperty("BitgoWebhooks.SeqServiceUrl")]
