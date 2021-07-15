@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using Newtonsoft.Json;
 using Service.Bitgo.Webhooks.Domain.Models;
+// ReSharper disable TemplateIsNotCompileTimeConstantProblem
 
 
 // ReSharper disable UnusedMember.Global
@@ -69,7 +70,6 @@ namespace Service.Bitgo.Webhooks.Services
             if (path.StartsWithSegments(TransferPath) && method == "POST")
             {
                 using var activity = MyTelemetry.StartActivity($"Receive transfer webhook");
-
 
                 var dto = JsonConvert.DeserializeObject<TransferDto>(body);
 

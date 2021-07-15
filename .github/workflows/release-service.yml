@@ -61,7 +61,7 @@ jobs:
         registry: simpletrading.azurecr.io
         repository: spot/myjetwallet.service.bitgo.webhooks
         tag_with_ref: true
-        build_args: app_version=mmyjetwallet.service.bitgo.webhooks:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
+        build_args: app_version=myjetwallet.service.bitgo.webhooks:${{ steps.extract_branch.outputs.branch }},app_compilation_date=${{ steps.current-time.outputs.formattedTime }}
 
   update_version:
     needs: build
