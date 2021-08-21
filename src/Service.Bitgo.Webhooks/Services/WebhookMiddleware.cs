@@ -22,6 +22,7 @@ namespace Service.Bitgo.Webhooks.Services
         private readonly IPublisher<SignalBitGoTransfer> _publisher;
 
         public string TransferPath = "/webhook/transfer";
+        public string ApprovalPath = "/webhook/approval";
 
         /// <summary>
         /// Middleware that handles all unhandled exceptions and logs them as errors.
@@ -82,6 +83,13 @@ namespace Service.Bitgo.Webhooks.Services
                     TransferId = dto.TransferId,
                     WalletId = dto.WalletId
                 });
+            }
+            
+            if (path.StartsWithSegments(ApprovalPath) && method == "POST")
+            {
+                using var activity = MyTelemetry.StartActivity($"Receive approval webhook");
+
+                _logger.LogInformation(body);
             }
 
             context.Response.StatusCode = 200;
