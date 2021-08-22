@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -32,8 +33,11 @@ namespace Service.Bitgo.Webhooks.Jobs
         private async Task DoTime()
         {
             var webhookUrl = Program.ReloadedSettings(e => e.WebhooksUrl).Invoke();
+            var transferUrl = $"{webhookUrl}/transfer";
+            var approvalUrl = $"{webhookUrl}/approval";
             var defaultConfirmations = Program.ReloadedSettings(e => e.DefaultWebhookConfirmations).Invoke();
-            var allTokenEnabledCoins = Program.ReloadedSettings(e => e.AllTokenEnabledCoins).Invoke().Split(";").ToList();
+            var allTokenEnabledCoins =
+                Program.ReloadedSettings(e => e.AllTokenEnabledCoins).Invoke().Split(";").ToList();
 
             var bitgoAssets = _myNoSqlReadRepository.Get();
             foreach (var bitgoAssetMapEntity in bitgoAssets)
@@ -48,12 +52,19 @@ namespace Service.Bitgo.Webhooks.Jobs
                         continue;
                     }
 
-                    var correctWebHook = false;
+                    var correctTransferWebHook = false;
+                    var correctApprovalWebHook = false;
                     foreach (var dataWebhook in webhooks.Data.Webhooks)
                     {
-                        if (dataWebhook.Url.StartsWith(webhookUrl))
+                        if (dataWebhook.Url.StartsWith(transferUrl))
                         {
-                            correctWebHook = true;
+                            correctTransferWebHook = true;
+                            continue;
+                        }
+
+                        if (dataWebhook.Url.StartsWith(approvalUrl))
+                        {
+                            correctApprovalWebHook = true;
                             continue;
                         }
 
@@ -76,28 +87,64 @@ namespace Service.Bitgo.Webhooks.Jobs
                         }
                     }
 
-                    if (correctWebHook) continue;
-
-                    var url = $"{webhookUrl}/{bitgoAssetMapEntity.BitgoCoin}";
-                    _logger.LogInformation("Adding new webhook url {url} for {coin} and wallet {wallet}",
-                        url, bitgoAssetMapEntity.BitgoCoin, wallet);
-                    var add = await _bitGoClient.AddWebhookAsync(bitgoAssetMapEntity.BitgoCoin, wallet,
-                        "transfer", allTokenEnabledCoins.Contains(bitgoAssetMapEntity.BitgoCoin), url,
-                        $"Webhook.{bitgoAssetMapEntity.BitgoCoin}", defaultConfirmations, false);
-                    if (add.Success)
+                    if (!correctTransferWebHook)
                     {
-                        _logger.LogInformation(
-                            "Added new webhook url {url} for {coin} and wallet {wallet}", url,
-                            bitgoAssetMapEntity.BitgoCoin, wallet);
+                        await AddTransferWebhook(transferUrl, bitgoAssetMapEntity.BitgoCoin, wallet,
+                            allTokenEnabledCoins, defaultConfirmations);
                     }
-                    else
+
+                    if (!correctApprovalWebHook)
                     {
-                        _logger.LogInformation(
-                            "Unable to add new webhook url {url} for {coin} and wallet {wallet}. Reason: {reason}",
-                            url, bitgoAssetMapEntity.BitgoCoin, wallet,
-                            add.Error);
+                        await AddApprovalWebhook(approvalUrl, bitgoAssetMapEntity.BitgoCoin, wallet);
                     }
                 }
+            }
+        }
+
+        private async Task AddTransferWebhook(string webhookUrl, string coin, string wallet,
+            List<string> allTokenEnabledCoins, int defaultConfirmations)
+        {
+            var url = $"{webhookUrl}/{coin}";
+            _logger.LogInformation("Adding new transfer webhook url {url} for {coin} and wallet {wallet}",
+                url, coin, wallet);
+            var add = await _bitGoClient.AddWebhookAsync(coin, wallet,
+                "transfer", allTokenEnabledCoins.Contains(coin), url,
+                $"Webhook.{coin}", defaultConfirmations, false);
+            if (add.Success)
+            {
+                _logger.LogInformation(
+                    "Added new transfer webhook url {url} for {coin} and wallet {wallet}", url,
+                    coin, wallet);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Unable to add new transfer webhook url {url} for {coin} and wallet {wallet}. Reason: {reason}",
+                    url, coin, wallet,
+                    add.Error);
+            }
+        }
+
+        private async Task AddApprovalWebhook(string webhookUrl, string coin, string wallet)
+        {
+            var url = $"{webhookUrl}/{coin}";
+            _logger.LogInformation("Adding new approval webhook url {url} for {coin} and wallet {wallet}",
+                url, coin, wallet);
+            var add = await _bitGoClient.AddWebhookAsync(coin, wallet,
+                "pendingapproval", false, url,
+                $"Webhook.{coin}", 0, false);
+            if (add.Success)
+            {
+                _logger.LogInformation(
+                    "Added new approval webhook url {url} for {coin} and wallet {wallet}", url,
+                    coin, wallet);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Unable to add new approval webhook url {url} for {coin} and wallet {wallet}. Reason: {reason}",
+                    url, coin, wallet,
+                    add.Error);
             }
         }
 

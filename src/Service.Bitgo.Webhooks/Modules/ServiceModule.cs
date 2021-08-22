@@ -37,6 +37,12 @@ namespace Service.Bitgo.Webhooks.Modules
                 .As<IPublisher<SignalBitGoTransfer>>()
                 .AutoActivate()
                 .SingleInstance();
+            
+            builder
+                .RegisterInstance(new SignalBitGoApprovalBusPublisher(serviceBusClient))
+                .As<IPublisher<SignalBitGoPendingApproval>>()
+                .AutoActivate()
+                .SingleInstance();
 
             var bitgoClient = new BitGoClient(Program.Settings.BitgoAccessToken, Program.Settings.BitgoExpressUrl)
             {

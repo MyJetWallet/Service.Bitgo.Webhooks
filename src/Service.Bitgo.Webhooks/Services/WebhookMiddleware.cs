@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
 using Newtonsoft.Json;
 using Service.Bitgo.Webhooks.Domain.Models;
+
 // ReSharper disable TemplateIsNotCompileTimeConstantProblem
 
 
@@ -19,19 +19,22 @@ namespace Service.Bitgo.Webhooks.Services
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<WebhookMiddleware> _logger;
-        private readonly IPublisher<SignalBitGoTransfer> _publisher;
+        private readonly IPublisher<SignalBitGoTransfer> _transferPublisher;
+        private readonly IPublisher<SignalBitGoPendingApproval> _approvalPublisher;
 
-        public string TransferPath = "/webhook/transfer";
-        public string ApprovalPath = "/webhook/approval";
+        public const string TransferPath = "/webhook/transfer";
+        public const string ApprovalPath = "/webhook/approval";
 
         /// <summary>
         /// Middleware that handles all unhandled exceptions and logs them as errors.
         /// </summary>
-        public WebhookMiddleware(RequestDelegate next, ILogger<WebhookMiddleware> logger, IPublisher<SignalBitGoTransfer> publisher)
+        public WebhookMiddleware(RequestDelegate next, ILogger<WebhookMiddleware> logger,
+            IPublisher<SignalBitGoTransfer> transferPublisher, IPublisher<SignalBitGoPendingApproval> approvalPublisher)
         {
             _next = next;
             _logger = logger;
-            _publisher = publisher;
+            _transferPublisher = transferPublisher;
+            _approvalPublisher = approvalPublisher;
         }
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace Service.Bitgo.Webhooks.Services
             if (method == "POST")
             {
                 await using var buffer = new MemoryStream();
-                
+
                 await context.Request.Body.CopyToAsync(buffer);
 
                 buffer.Position = 0L;
@@ -70,26 +73,35 @@ namespace Service.Bitgo.Webhooks.Services
 
             if (path.StartsWithSegments(TransferPath) && method == "POST")
             {
-                using var activity = MyTelemetry.StartActivity($"Receive transfer webhook");
+                using var activity = MyTelemetry.StartActivity("Receive transfer webhook");
 
                 var dto = JsonConvert.DeserializeObject<TransferDto>(body);
 
                 path.ToString().AddToActivityAsTag("webhook-path");
                 body.AddToActivityAsTag("webhook-body");
 
-                await _publisher.PublishAsync(new SignalBitGoTransfer()
+                await _transferPublisher.PublishAsync(new SignalBitGoTransfer()
                 {
                     Coin = dto.Coin,
                     TransferId = dto.TransferId,
                     WalletId = dto.WalletId
                 });
             }
-            
+
             if (path.StartsWithSegments(ApprovalPath) && method == "POST")
             {
-                using var activity = MyTelemetry.StartActivity($"Receive approval webhook");
+                using var activity = MyTelemetry.StartActivity("Receive approval webhook");
 
-                _logger.LogInformation(body);
+                var dto = JsonConvert.DeserializeObject<ApprovalDto>(body);
+
+                path.ToString().AddToActivityAsTag("webhook-path");
+                body.AddToActivityAsTag("webhook-body");
+
+                await _approvalPublisher.PublishAsync(new SignalBitGoPendingApproval()
+                {
+                    WalletId = dto.WalletId,
+                    PendingApprovalId = dto.PendingApprovalId
+                });
             }
 
             context.Response.StatusCode = 200;
@@ -98,22 +110,27 @@ namespace Service.Bitgo.Webhooks.Services
 
     public class TransferDto
     {
-        [JsonProperty("coin")]
-        public string Coin { get; set; }
+        [JsonProperty("coin")] public string Coin { get; set; }
 
-        [JsonProperty("wallet")]
-        public string WalletId { get; set; }
+        [JsonProperty("wallet")] public string WalletId { get; set; }
 
-        [JsonProperty("type")]
-        public string Type { get; set; }
+        [JsonProperty("type")] public string Type { get; set; }
 
-        [JsonProperty("state")]
-        public string State { get; set; }
+        [JsonProperty("state")] public string State { get; set; }
 
-        [JsonProperty("hash")]
-        public string Hash { get; set; }
+        [JsonProperty("hash")] public string Hash { get; set; }
 
-        [JsonProperty("transfer")]
-        public string TransferId { get; set; }
+        [JsonProperty("transfer")] public string TransferId { get; set; }
+    }
+
+    public class ApprovalDto
+    {
+        [JsonProperty("wallet")] public string WalletId { get; set; }
+
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("state")] public string State { get; set; }
+
+        [JsonProperty("pendingApprovalId")] public string PendingApprovalId { get; set; }
     }
 }
