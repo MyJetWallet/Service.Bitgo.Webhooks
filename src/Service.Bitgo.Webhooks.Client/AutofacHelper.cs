@@ -21,5 +21,17 @@ namespace Service.Bitgo.Webhooks.Client
                 .As<ISubscriber<SignalBitGoTransfer>>()
                 .SingleInstance();
         }
+        public static void RegisterSignalBitGoApprovalSubscriber(this ContainerBuilder builder,
+            MyServiceBusTcpClient client,
+            string queueName,
+            TopicQueueType queryType)
+        {
+            var subs = new SignalBitGoApprovalSubscriber(client, queueName, queryType);
+
+            builder
+                .RegisterInstance(subs)
+                .As<ISubscriber<SignalBitGoPendingApproval>>()
+                .SingleInstance();
+        }
     }
 }
