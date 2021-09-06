@@ -125,7 +125,7 @@ namespace Service.Bitgo.Webhooks.Services
 
     public class ApprovalDto
     {
-        [JsonProperty("wallet")] public string WalletId { get; set; }
+        [JsonProperty("walletId")] public string WalletId { get; set; }
 
         [JsonProperty("type")] public string Type { get; set; }
 
